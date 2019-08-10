@@ -1,0 +1,18 @@
+# Prerequisites
+*.d
+
+# Object files
+*.o
+
+# ARM files
+*.lst
+
+# Build files
+
+build/
+build_800/
+build_900/
+.dep/
+
+# Temporary files
+*~

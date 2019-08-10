@@ -236,7 +236,7 @@ int16_t dump_selection = 0;
 
 volatile int16_t wait_count = 0;
 
-float measured[2][101][2];
+float measured[2][SWEEP_POINTS][2];
 
 static void
 wait_dsp(int count)
@@ -366,11 +366,11 @@ static void cmd_gamma(BaseSequentialStream *chp, int argc, char *argv[])
 #if 0
 int32_t frequency0 = 1000000;
 int32_t frequency1 = 900000000;
-int16_t sweep_points = 101;
+int16_t sweep_points = SWEEP_POINTS;
 
-uint32_t frequencies[101];
+uint32_t frequencies[SWEEP_POINTS];
 uint16_t cal_status;
-float cal_data[5][101][2];
+float cal_data[5][SWEEP_POINTs1][2];
 #endif
 
 config_t config = {
@@ -398,7 +398,7 @@ properties_t current_props = {
 #else
   /* frequency1 */ 300000000, // end = 300MHz
 #endif
-  /* sweep_points */     101,
+  /* sweep_points */SWEEP_POINTS,
   /* cal_status */         0,
   /* frequencies */       {},
   /* cal_data */          {},
@@ -577,16 +577,16 @@ update_frequencies(void)
   int32_t start;
   if (frequency1 > 0) {
     start = frequency0;
-    span = (frequency1 - frequency0)/100;
+    span = (frequency1 - frequency0)/(SWEEP_POINTS-1);
   } else {
     int center = frequency0;
     span = -frequency1;
     start = center - span/2;
-    span /= 100;
+    span /= (SWEEP_POINTS-1);
   }
 
   for (i = 0; i < sweep_points; i++)
-    frequencies[i] = start + span * i / (sweep_points - 1) * 100;
+    frequencies[i] = start + span * i;
 
   if (cal_auto_interpolate)
     cal_interpolate(0);

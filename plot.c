@@ -42,7 +42,7 @@ int area_height = HEIGHT;
  * CELL_X[5:9] position in the cell
  * CELL_Y[0:4]
  */
-uint32_t trace_index[TRACES_MAX][101];
+uint32_t trace_index[TRACES_MAX][SWEEP_POINTS];
 
 #define INDEX(x, y, n) \
   ((((x)&0x03e0UL)<<22) | (((y)&0x03e0UL)<<17) | (((n)&0x0fffUL)<<10)  \
@@ -576,6 +576,9 @@ gamma2imp(char *buf, int len, const float coeff[2], uint32_t frequency)
 //  float z = sqrtf(zr*zr + zi*zi);
   int n;
 
+/*
+ * Original code gives ohms + capacitor/inductor
+ *
   n = string_value_with_prefix(buf, len, zr, S_OHM[0]);
   buf[n++] = ' ';
 
@@ -586,6 +589,22 @@ gamma2imp(char *buf, int len, const float coeff[2], uint32_t frequency)
     float l = zi / (PI2 * frequency);
     string_value_with_prefix(buf+n, len-n, l, 'H');
   }
+*/
+
+/*
+ * New code gives complex impedance
+ *
+ * See https://groups.io/g/nanovna-users/topic/32645346?p=,,,20,0,0,0::recentpostdate%2Fsticky,,,20,2,0,32645346
+ *
+ */
+
+  n = string_value_with_prefix(buf, len, zr, '\0');
+  if (zi<0)
+    buf[n++] = '-';
+  else
+    buf[n++] = '+';
+  buf[n++] = 'j';
+  string_value_with_prefix(buf+n, len-n, fabs(zi), S_OHM[0]);
 }
 
 void
@@ -728,7 +747,7 @@ mark_cells_from_index(void)
   }
 }
 
-void plot_into_index(float measured[2][101][2])
+void plot_into_index(float measured[2][SWEEP_POINTS][2])
 {
   int i, t;
   for (i = 0; i < sweep_points; i++) {
@@ -804,7 +823,7 @@ cell_drawline(int w, int h, int x0, int y0, int x1, int y1, int c)
 }
 
 int
-search_index_range(int x, int y, uint32_t index[101], int *i0, int *i1)
+search_index_range(int x, int y, uint32_t index[SWEEP_POINTS], int *i0, int *i1)
 {
   int i, j;
   int head = 0;
@@ -841,7 +860,7 @@ search_index_range(int x, int y, uint32_t index[101], int *i0, int *i1)
 }
 
 int
-search_index_range_x(int x, uint32_t index[101], int *i0, int *i1)
+search_index_range_x(int x, uint32_t index[SWEEP_POINTS], int *i0, int *i1)
 {
   int i, j;
   int head = 0;
@@ -1108,7 +1127,7 @@ draw_cell(int m, int n)
     if (search_index_range_x(x0, trace_index[t], &i0, &i1)) {
       if (i0 > 0)
         i0--;
-      if (i1 < 101-1)
+      if (i1 < SWEEP_POINTS-1)
         i1++;
       for (i = i0; i < i1; i++) {
         int x1 = CELL_X(trace_index[t][i]);
